@@ -113,7 +113,13 @@ if menu == "Home":
     st.markdown("""
     ### Sistem Pakar Diagnosa Penyakit Pencernaan Manusia
     Aplikasi ini dikembangkan oleh **Septyan Dwi Priyanto** sebagai syarat kelulusan Skripsi di **Universitas Indraprasta PGRI (UNINDRA)**.
+    
+    **Detail Akademik:**
+    * **Jenjang:** Sarjana (S1)
+    * **NIM:** 202243502061
+    * **Program Studi:** Teknik Informatika
     """)
+    st.write("©️2026 SDP Production - Sistem Pakar Diagnosa Penyakit Pencernaan Manusia v1.0")
 
 # --- 5. HALAMAN DIAGNOSA ---
 elif menu == "Mulai Diagnosa":

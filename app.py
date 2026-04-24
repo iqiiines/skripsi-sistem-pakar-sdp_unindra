@@ -109,14 +109,14 @@ init_db()
 
 # --- 3. UI SIDEBAR ---
 with st.sidebar:
-    st.title("🩺 SISTEM PAKAR")
+    st.title("🩺 SDP EXPERT SYSTEM")
     menu = st.radio("Navigasi Utama", ["Home", "Mulai Diagnosa", "Riwayat Analisa", "Login Staf"])
 
 # --- 4. HALAMAN HOME ---
 if menu == "Home":
-    st.header("🏠 Selamat Datang")
+    st.header("Selamat Datang")
     st.image("https://img.freepik.com/free-vector/doctors-concept-illustration_114360-1515.jpg", width=500)
-    st.write("Sistem Pakar Diagnosa Penyakit Pencernaan Manusia v2.0")
+    st.write("©️2026 SDP Production - Sistem Pakar Diagnosa Penyakit Pencernaan Manusia v1.0")
 
 # --- 5. HALAMAN DIAGNOSA ---
 elif menu == "Mulai Diagnosa":

@@ -175,7 +175,7 @@ elif menu == "Mulai Diagnosa":
                               ", ".join(gejala_user), hasil_txt))
                 conn.commit()
                 conn.close()
-                st.success(f"📌 Hasil Diagnosa: {hasil_txt}")
+                st.success(f"Hasil Diagnosa: {hasil_txt}")
 
 # --- 6. HALAMAN RIWAYAT ---
 elif menu == "Riwayat Analisa":
@@ -211,7 +211,7 @@ elif menu == "Login Staf":
                 st.rerun()
             else: st.error("Username atau Password salah!")
     else:
-        st.title(f"🛠️ Panel Kontrol {st.session_state.role}")
+        st.title(f"Panel Kontrol {st.session_state.role}")
         
         # Pengaturan Tab Berdasarkan Role
         if st.session_state.role == "Admin":
@@ -241,9 +241,9 @@ elif menu == "Login Staf":
                         c_a.write(f"**{nm}**")
                         c_a.caption(f"Gejala: {gj}")
                         
-                        if c_b.button("✏️", key=f"btn_ed_{idp}"):
+                        if c_b.button("Edit", key=f"btn_ed_{idp}"):
                             st.session_state[f"em_{idp}"] = True
-                        if c_b.button("🗑️", key=f"btn_dl_{idp}"):
+                        if c_b.button("Hapus", key=f"btn_dl_{idp}"):
                             hapus_penyakit(idp)
                             st.rerun()
                         

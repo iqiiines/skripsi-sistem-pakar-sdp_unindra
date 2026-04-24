@@ -110,24 +110,28 @@ with st.sidebar:
 if menu == "Home":
     st.header("Selamat Datang")
     
-    # Membuat dua kolom dengan rasio 1:2 agar sejajar rapi
+    # Menggunakan kolom dengan rasio 1:2 agar proporsional
     col_logo, col_illus = st.columns([1, 2])
     
     with col_logo:
-        # Gunakan URL gambar yang valid atau path lokal (contoh: 'logo_unindra.png')
-        # Di sini saya sertakan URL placeholder yang stabil
-        st.image("https://upload.wikimedia.org/wikipedia/id/8/8f/Logo_UNINDRA.png", 
-                 width=180) # Atur lebar agar tidak terlalu besar dibanding ilustrasi
+        # Memanggil file yang baru Anda upload
+        # Pastikan nama file di bawah ini sama persis dengan yang ada di GitHub
+        try:
+            st.image("Logo-unindra_1.png", width=180)
+        except:
+            # Fallback jika file lokal tidak ditemukan saat testing
+            st.error("File Logo-unindra_1.png tidak ditemukan di direktori.")
 
     with col_illus:
         # Menampilkan ilustrasi dokter
         st.image("https://img.freepik.com/free-vector/doctors-concept-illustration_114360-1515.jpg", 
                  use_container_width=True)
 
-    # CSS untuk merapikan posisi logo agar rata tengah secara vertikal terhadap ilustrasi
+    # CSS Khusus untuk menyejajarkan logo di tengah tinggi ilustrasi (Vertical Align)
     st.markdown(
         """
         <style>
+        /* Mencari kontainer kolom pertama agar isinya rata tengah secara vertikal */
         [data-testid="stColumn"]:first-child {
             display: flex;
             align-items: center;
@@ -149,7 +153,7 @@ if menu == "Home":
     """)
     st.divider()
     st.write("©️2026 SDP Production - Sistem Pakar Diagnosa Penyakit Pencernaan Manusia v1.0")
-
+    
 # --- 5. HALAMAN DIAGNOSA ---
 elif menu == "Mulai Diagnosa":
     st.header("Form Diagnosa & Rekam Medis")

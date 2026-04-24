@@ -11,9 +11,14 @@ def hash_password(password):
 def init_db():
     conn = sqlite3.connect('sistem_pakar.db')
     c = conn.cursor()
-    # Tabel Basis Pengetahuan
+    # Tabel Basis Pengetahuan (Ditambah kolom Organ, Arah, dan Solusi)
     c.execute('''CREATE TABLE IF NOT EXISTS basis_pengetahuan 
-                 (id INTEGER PRIMARY KEY AUTOINCREMENT, nama_penyakit TEXT, gejala TEXT)''')
+                 (id INTEGER PRIMARY KEY AUTOINCREMENT, 
+                  nama_penyakit TEXT, 
+                  gejala TEXT,
+                  organ TEXT,
+                  arah TEXT,
+                  solusi TEXT)''')
     
     # Tabel History
     c.execute('''CREATE TABLE IF NOT EXISTS history_diagnosa 
@@ -34,25 +39,24 @@ def init_db():
         c.execute("INSERT INTO users (username, password, role) VALUES (?, ?, ?)", 
                   ("admin", pw_admin, "Admin"))
     
-    # Data Penyakit & Gejala Sesuai Gambar 3 (Update Database)
+    # Data Penyakit & Gejala Master (Update dengan Detail Organ & Solusi)
     c.execute("SELECT COUNT(*) FROM basis_pengetahuan")
     if c.fetchone()[0] == 0:
-        # Mapping Gejala berdasarkan Kode G01-G20 untuk akurasi diagnosa
         default_data = [
-            ("Gastritis (Maag)", "Nyeri atau perih pada ulu hati, Mual, Perut terasa kembung atau begah, Cepat merasa kenyang saat makan"),
-            ("GERD (Asam Lambung)", "Nyeri atau perih pada ulu hati, Sensasi panas atau terbakar di dada (heartburn), Mulut terasa pahit atau asam, Sering bersendawa"),
-            ("Diare", "Buang air besar (BAB) cair lebih dari 3 kali sehari, Sakit perut atau kram perut yang melilit, Badan terasa lemas dan mudah lelah"),
-            ("Demam Tifoid (Tipes)", "Demam (suhu tubuh meningkat), Badan terasa lemas dan mudah lelah, Sakit kepala atau pusing, Kehilangan nafsu makan"),
-            ("Apendisitis (Usus Buntu)", "Nyeri perut yang berawal dari pusar lalu berpindah ke perut bagian kanan bawah, Rasa sakit semakin parah saat batuk, berjalan, atau bergerak, Mual, Demam (suhu tubuh meningkat)"),
-            ("Konstipasi (Sembelit)", "Susah buang air besar (BAB) atau frekuensi BAB kurang dari 3 kali seminggu, Feses keras, kering, atau menggumpal, Perlu mengejan keras saat BAB"),
-            ("Disentri", "Buang air besar (BAB) cair lebih dari 3 kali sehari, Sakit perut atau kram perut yang melilit, BAB disertai darah atau lendir, Demam (suhu tubuh meningkat)")
+            ("Gastritis (Maag)", "Nyeri atau perih pada ulu hati, Mual, Perut terasa kembung atau begah, Cepat merasa kenyang saat makan", "Lambung", "Bagian Tengah Atas (Ulu Hati)", "Makan teratur porsi kecil. Hindari pedas, asam, dan kafein."),
+            ("GERD (Asam Lambung)", "Nyeri atau perih pada ulu hati, Sensasi panas atau terbakar di dada (heartburn), Mulut terasa pahit atau asam, Sering bersendawa", "Kerongkongan", "Dada tengah hingga tenggorokan", "Jangan berbaring setelah makan. Tidur dengan posisi kepala lebih tinggi."),
+            ("Diare", "Buang air besar (BAB) cair lebih dari 3 kali sehari, Sakit perut atau kram perut yang melilit, Badan terasa lemas dan mudah lelah", "Usus Besar & Halus", "Seluruh area perut (kram)", "Perbanyak cairan/oralit untuk mencegah dehidrasi."),
+            ("Demam Tifoid (Tipes)", "Demam (suhu tubuh meningkat), Badan terasa lemas dan mudah lelah, Sakit kepala atau pusing, Kehilangan nafsu makan", "Usus Halus", "Area perut tengah (sekitar pusar)", "Istirahat total (bed rest) dan konsumsi makanan lunak."),
+            ("Apendisitis (Usus Buntu)", "Nyeri perut yang berawal dari pusar lalu berpindah ke perut bagian kanan bawah, Rasa sakit semakin parah saat batuk, berjalan, atau bergerak, Mual, Demam (suhu tubuh meningkat)", "Umbai Cacing", "Perut bagian kanan bawah", "Segera ke UGD. Memerlukan penanganan medis/bedah darurat."),
+            ("Konstipasi (Sembelit)", "Susah buang air besar (BAB) atau frekuensi BAB kurang dari 3 kali seminggu, Feses keras, kering, atau menggumpal, Perlu mengejan keras saat BAB", "Rektum", "Bagian bawah perut", "Perbanyak serat (buah/sayur) dan minum air putih."),
+            ("Disentri", "Buang air besar (BAB) cair lebih dari 3 kali sehari, Sakit perut atau kram perut yang melilit, BAB disertai darah atau lendir, Demam (suhu tubuh meningkat)", "Usus Besar", "Perut bawah dan tengah", "Segera periksa ke dokter untuk penanganan infeksi.")
         ]
-        c.executemany("INSERT INTO basis_pengetahuan (nama_penyakit, gejala) VALUES (?, ?)", default_data)
+        c.executemany("INSERT INTO basis_pengetahuan (nama_penyakit, gejala, organ, arah, solusi) VALUES (?, ?, ?, ?, ?)", default_data)
         
     conn.commit()
     conn.close()
 
-# --- 2. FUNGSI CRUD & UTILITAS ---
+# --- 2. FUNGSI CRUD ---
 def ambil_basis():
     conn = sqlite3.connect('sistem_pakar.db')
     c = conn.cursor()
@@ -61,17 +65,11 @@ def ambil_basis():
     conn.close()
     return data
 
-def tambah_penyakit(nama, gejala):
+def tambah_penyakit(nama, gejala, organ, arah, solusi):
     conn = sqlite3.connect('sistem_pakar.db')
     c = conn.cursor()
-    c.execute("INSERT INTO basis_pengetahuan (nama_penyakit, gejala) VALUES (?, ?)", (nama, gejala))
-    conn.commit()
-    conn.close()
-
-def update_penyakit(id_p, nama, gejala):
-    conn = sqlite3.connect('sistem_pakar.db')
-    c = conn.cursor()
-    c.execute("UPDATE basis_pengetahuan SET nama_penyakit=?, gejala=? WHERE id=?", (nama, gejala, id_p))
+    c.execute("INSERT INTO basis_pengetahuan (nama_penyakit, gejala, organ, arah, solusi) VALUES (?, ?, ?, ?, ?)", 
+              (nama, gejala, organ, arah, solusi))
     conn.commit()
     conn.close()
 
@@ -90,25 +88,6 @@ def ambil_history():
     conn.close()
     return data
 
-def tambah_user(username, password, role):
-    try:
-        conn = sqlite3.connect('sistem_pakar.db')
-        c = conn.cursor()
-        c.execute("INSERT INTO users (username, password, role) VALUES (?, ?, ?)", 
-                  (username, hash_password(password), role))
-        conn.commit()
-        conn.close()
-        return True
-    except: return False
-
-def ganti_password(username, password_baru):
-    conn = sqlite3.connect('sistem_pakar.db')
-    c = conn.cursor()
-    c.execute("UPDATE users SET password=? WHERE username=?", 
-              (hash_password(password_baru), username))
-    conn.commit()
-    conn.close()
-
 init_db()
 
 # --- 3. UI SIDEBAR ---
@@ -120,7 +99,7 @@ with st.sidebar:
 if menu == "Home":
     st.header("Selamat Datang")
     st.image("https://img.freepik.com/free-vector/doctors-concept-illustration_114360-1515.jpg", width=500)
-    st.markdown("""
+    st.markdown(f"""
     ### Sistem Pakar Diagnosa Penyakit Pencernaan Manusia
     Aplikasi ini dikembangkan oleh **Septyan Dwi Priyanto** sebagai syarat kelulusan Skripsi di **Universitas Indraprasta PGRI (UNINDRA)**.
     
@@ -134,22 +113,21 @@ if menu == "Home":
 # --- 5. HALAMAN DIAGNOSA ---
 elif menu == "Mulai Diagnosa":
     st.header("Form Diagnosa & Rekam Medis")
-    col1, col2 = st.columns(2)
-    with col1:
+    col_a, col_b = st.columns(2)
+    with col_a:
         nama_p = st.text_input("Nama Lengkap Pasien*")
         tgl_l = st.date_input("Tanggal Lahir*", value=date(2000, 1, 1))
         usia = st.number_input("Usia (Tahun)*", min_value=0)
-    with col2:
+    with col_b:
         tb = st.number_input("Tinggi Badan (cm)*", min_value=0)
         bb = st.number_input("Berat Badan (kg)*", min_value=0)
         jk = st.selectbox("Jenis Kelamin*", ["Laki-laki", "Perempuan"])
     
     goldar = st.selectbox("Golongan Darah*", ["A", "B", "AB", "O"])
-    riwayat_p = st.text_area("Riwayat Penyakit (Opsional)")
+    riwayat_p = st.text_area("Riwayat Penyakit Sebelumnya")
 
     st.divider()
     
-    # LIST GEJALA BERDASARKAN GAMBAR 3 (G01-G20)
     st.subheader("Pilih Gejala yang Dirasakan:")
     gejala_list = [
         "Nyeri atau perih pada ulu hati", "Mual", "Muntah", "Perut terasa kembung atau begah",
@@ -169,25 +147,36 @@ elif menu == "Mulai Diagnosa":
         if cols[i % 2].checkbox(g, key=f"gj_{i}"):
             gejala_user.append(g)
 
-    if st.button("Proses Analisa Diagnosa"):
+    if st.button("Proses Analisa Diagnosa", type="primary"):
         if not nama_p or tb == 0:
             st.error("Mohon lengkapi biodata pasien!")
         elif not gejala_user:
             st.error("Silakan pilih minimal satu gejala!")
         else:
             raw_p = ambil_basis()
-            data_map = {item[1]: [g.strip() for g in item[2].split(",")] for item in raw_p}
+            hasil_list = []
             
-            hasil = []
-            for p_nm, p_gj in data_map.items():
-                match = set(gejala_user).intersection(p_gj)
+            st.subheader("Hasil Analisis Medis:")
+            
+            for item in raw_p:
+                id_p, nm, gj_p, org, arh, sol = item
+                p_gj_list = [gx.strip() for gx in gj_p.split(",")]
+                
+                # Menghitung kecocokan
+                match = set(gejala_user).intersection(p_gj_list)
                 if match:
-                    persen = (len(match)/len(p_gj))*100
-                    hasil.append(f"{p_nm} ({persen:.0f}%)")
+                    persen = (len(match)/len(p_gj_list))*100
+                    if persen >= 50: # Tampilkan jika kecocokan >= 50%
+                        hasil_list.append(f"{nm} ({persen:.0f}%)")
+                        with st.expander(f"➔ {nm} (Tingkat Keyakinan: {persen:.0f}%)", expanded=True):
+                            c1, c2 = st.columns(2)
+                            c1.write(f"**Organ Terdampak:** {org}")
+                            c2.write(f"**Titik Lokasi Nyeri:** :red[{arh}]")
+                            st.info(f"**Saran Tindakan:** {sol}")
+
+            hasil_txt = ", ".join(hasil_list) if hasil_list else "Tidak Terdeteksi"
             
-            hasil_txt = ", ".join(hasil) if hasil else "Tidak Terdeteksi Penyakit Spesifik"
-            
-            # Simpan ke DB
+            # Simpan ke History
             conn = sqlite3.connect('sistem_pakar.db')
             conn.execute('''INSERT INTO history_diagnosa 
                             (nama_pasien, tgl_lahir, usia, tb, bb, jenis_kelamin, 
@@ -198,7 +187,6 @@ elif menu == "Mulai Diagnosa":
                           ", ".join(gejala_user), hasil_txt))
             conn.commit()
             conn.close()
-            st.success(f"Hasil Diagnosa: {hasil_txt}")
 
 # --- 6. HALAMAN RIWAYAT ---
 elif menu == "Riwayat Analisa":
@@ -215,59 +203,48 @@ elif menu == "Riwayat Analisa":
 # --- 7. PANEL LOGIN STAF ---
 elif menu == "Login Staf":
     if 'role' not in st.session_state: st.session_state.role = None
-    if 'user' not in st.session_state: st.session_state.user = None
-
+    
     if not st.session_state.role:
-        st.subheader("Login Staf")
+        st.subheader("Login Staf Admin")
         u = st.text_input("Username")
         p = st.text_input("Password", type="password")
         if st.button("Masuk"):
             conn = sqlite3.connect('sistem_pakar.db')
             c = conn.cursor()
-            c.execute("SELECT role FROM users WHERE username=? AND password=?", 
-                      (u, hash_password(p)))
+            c.execute("SELECT role FROM users WHERE username=? AND password=?", (u, hash_password(p)))
             res = c.fetchone()
             conn.close()
             if res:
                 st.session_state.role = res[0]
-                st.session_state.user = u
                 st.rerun()
-            else: st.error("Username atau Password salah!")
+            else: st.error("Akses Ditolak!")
     else:
-        st.title(f"Panel Kontrol {st.session_state.role}")
-        tabs = st.tabs(["Basis Pengetahuan", "Riwayat & Export", "Manajemen User", "Akun Saya"])
-        t1, t2, t3, t4 = tabs
-
-        # TAB 1: BASIS PENGETAHUAN
+        st.title(f"Panel {st.session_state.role}")
+        t1, t2 = st.tabs(["Kelola Basis Pengetahuan", "Logout"])
+        
         with t1:
-            st.subheader("Kelola Daftar Penyakit & Gejala")
-            with st.expander("➕ Tambah Penyakit Baru"):
+            with st.expander("➕ Tambah Data Penyakit"):
                 n_p = st.text_input("Nama Penyakit")
                 n_g = st.text_area("Gejala (pisahkan dengan koma)")
-                if st.button("Simpan Data"):
-                    tambah_penyakit(n_p, n_g)
-                    st.success("Data berhasil ditambahkan!")
+                n_o = st.text_input("Organ")
+                n_a = st.text_input("Arah/Lokasi Nyeri")
+                n_s = st.text_area("Solusi Medis")
+                if st.button("Simpan ke Database"):
+                    tambah_penyakit(n_p, n_g, n_o, n_a, n_s)
+                    st.success("Data Berhasil Disimpan!")
                     st.rerun()
             
             st.divider()
-            for idp, nm, gj in ambil_basis():
+            for row in ambil_basis():
                 with st.container(border=True):
-                    c_a, c_b = st.columns([4, 1])
-                    c_a.write(f"**{nm}**")
-                    c_a.caption(f"Gejala: {gj}")
-                    if c_b.button("Hapus", key=f"btn_dl_{idp}"):
-                        hapus_penyakit(idp)
+                    col_1, col_2 = st.columns([4,1])
+                    col_1.write(f"**{row[1]}** ({row[3]})")
+                    col_1.caption(f"Gejala: {row[2]}")
+                    if col_2.button("Hapus", key=f"del_{row[0]}"):
+                        hapus_penyakit(row[0])
                         st.rerun()
-
-        # TAB 2-4 (Riwayat, User, Akun) tetap sama...
+        
         with t2:
-            st.subheader("Export Data")
-            h_all = ambil_history()
-            if h_all:
-                df_exp = pd.DataFrame(h_all)
-                st.download_button("📥 Download CSV", df_exp.to_csv().encode('utf-8'), "report.csv")
-                st.dataframe(df_exp)
-
-        if st.button("Keluar (Logout)"):
-            st.session_state.role = None
-            st.rerun()
+            if st.button("Keluar Sistem"):
+                st.session_state.role = None
+                st.rerun()

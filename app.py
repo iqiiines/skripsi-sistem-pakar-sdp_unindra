@@ -138,23 +138,77 @@ elif menu == "Login Staf":
             else: st.error("Gagal Login!")
     else:
         st.title(f"🛠️ Panel {st.session_state.role}")
+        
+        # Inisialisasi Tab berdasarkan Role
         if st.session_state.role == "Admin":
-            t1, t2, t3 = st.tabs(["Basis Pengetahuan", "Riwayat & Export", "Manajemen User"])
+            t1, t2, t3, t4 = st.tabs(["Basis Pengetahuan", "Riwayat & Export", "Manajemen User", "Akun Saya"])
         else:
-            t2, t3 = st.tabs(["Riwayat & Export", "Akun Saya"])
-            t1 = None
+            t2, t4 = st.tabs(["Riwayat & Export", "Akun Saya"])
+            t1, t3 = None, None
 
+        # --- TAB 1: KELOLA GEJALA (Hanya Admin) ---
         if t1:
             with t1:
-                st.subheader("Kelola Penyakit & Gejala")
-                # (Fitur Tambah/Edit/Hapus Penyakit masuk di sini)
-        
+                st.subheader("Edit/Hapus Penyakit & Gejala")
+                with st.expander("➕ Tambah Penyakit Baru"):
+                    n_p = st.text_input("Nama Penyakit Baru")
+                    n_g = st.text_area("Gejala (pisahkan dengan koma)")
+                    if st.button("Simpan Penyakit"):
+                        tambah_penyakit(n_p, n_g) # Pastikan fungsi ini sudah ada di bagian atas script
+                        st.success("Berhasil ditambah!")
+                        st.rerun()
+                
+                st.divider()
+                for idp, nm, gj in ambil_basis():
+                    with st.container(border=True):
+                        col_a, col_b = st.columns([3, 1])
+                        col_a.write(f"**{nm}**")
+                        col_a.caption(f"Gejala: {gj}")
+                        
+                        if col_b.button("✏️ Edit", key=f"ed_{idp}"):
+                            st.session_state[f"edit_mode_{idp}"] = True
+                        if col_b.button("🗑️", key=f"del_{idp}"):
+                            hapus_penyakit(idp)
+                            st.rerun()
+                        
+                        if st.session_state.get(f"edit_mode_{idp}"):
+                            new_nm = st.text_input("Nama", value=nm, key=f"nnm_{idp}")
+                            new_gj = st.text_area("Gejala", value=gj, key=f"ngj_{idp}")
+                            if st.button("Update", key=f"up_{idp}"):
+                                update_penyakit(idp, new_nm, new_gj)
+                                st.session_state[f"edit_mode_{idp}"] = False
+                                st.rerun()
+
+        # --- TAB 2: RIWAYAT & EXPORT ---
         with t2:
-            st.subheader("Data & Export CSV")
+            st.subheader("Data Riwayat Pasien")
             h_data = ambil_history()
             if h_data:
-                df_exp = pd.DataFrame(h_data)
-                st.download_button("📥 Download Data CSV", df_exp.to_csv().encode('utf-8'), "riwayat.csv", "text/csv")
+                df_exp = pd.DataFrame(h_data, columns=["ID", "Nama", "Lahir", "Usia", "TB", "BB", "Gender", "GolDar", "Riwayat", "Waktu", "Gejala", "Hasil"])
+                st.download_button("📥 Export CSV", df_exp.to_csv(index=False).encode('utf-8'), "riwayat.csv", "text/csv")
+                st.dataframe(df_exp.drop(columns=["ID"]))
+            else:
+                st.info("Belum ada riwayat.")
+
+        # --- TAB 3: MANAJEMEN USER (Hanya Admin) ---
+        if t3:
+            with t3:
+                st.subheader("Tambah User & Role Baru")
+                u_new = st.text_input("Username Baru")
+                p_new = st.text_input("Password Baru", type="password")
+                r_new = st.selectbox("Role", ["Petugas", "Admin"])
+                if st.button("Daftarkan User"):
+                    if tambah_user(u_new, p_new, r_new):
+                        st.success(f"User {u_new} aktif!")
+                    else: st.error("Username sudah ada!")
+
+        # --- TAB 4: GANTI PASSWORD (Semua Role) ---
+        with t4:
+            st.subheader("Ganti Password Akun")
+            pw_baru = st.text_input("Password Baru", type="password")
+            if st.button("Perbarui Password"):
+                ganti_password(st.session_state.user, pw_baru)
+                st.success("Password diperbarui!")
 
         if st.button("Logout"):
             st.session_state.role = None

@@ -109,7 +109,40 @@ with st.sidebar:
 # --- 4. HALAMAN HOME ---
 if menu == "Home":
     st.header("Selamat Datang")
-    st.image("https://img.freepik.com/free-vector/doctors-concept-illustration_114360-1515.jpg", width=500)
+    
+    # Membuat dua kolom untuk menyejajarkan gambar
+    # Rasio [1, 3] berarti kolom kanan (ilustrasi) 3x lebih lebar dari kiri (logo)
+    # Ini untuk menjaga proporsi asli gambar ilustrasi agar tidak terlalu kecil.
+    col_logo, col_illus = st.columns([1, 3])
+    
+    with col_logo:
+        # Menampilkan Logo UNINDRA (image_3.png)
+        st.image("https://upload.wikimedia.org/wikipedia/id/8/8f/Logo_UNINDRA.png", caption="Logo UNINDRA", use_container_width=True)
+        # Catatan: URL di atas adalah contoh URL publik untuk logo UNINDRA. 
+        # Jika Anda memiliki file lokal, gunakan st.image("path/to/image_3.png", ...)
+
+    with col_illus:
+        # Menampilkan Ilustrasi Dokter (image_2.png)
+        st.image("https://img.freepik.com/free-vector/doctors-concept-illustration_114360-1515.jpg", use_container_width=True)
+
+    # Menambahkan CSS untuk memaksa logo UNINDRA sejajar secara vertikal dengan ilustrasi
+    st.markdown(
+        """
+        <style>
+        /* Target kolom logo agar isinya rata tengah secara vertikal */
+        [data-testid="stColumn"]:first-child {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        /* Opsional: memastikan gambar di dalam kolom logo tidak melebihi tinggi ilustrasi jika diperlukan,
+           tapi use_container_width=True biasanya sudah cukup. */
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+    # Lanjut dengan teks detail akademik
     st.markdown("""
     ### Sistem Pakar Diagnosa Penyakit Pencernaan Manusia
     Aplikasi ini dikembangkan oleh **Septyan Dwi Priyanto** sebagai syarat kelulusan Skripsi di **Universitas Indraprasta PGRI (UNINDRA)**.
@@ -119,6 +152,7 @@ if menu == "Home":
     * **NIM:** 202243502061
     * **Program Studi:** Teknik Informatika
     """)
+    st.divider()
     st.write("©️2026 SDP Production - Sistem Pakar Diagnosa Penyakit Pencernaan Manusia v1.0")
 
 # --- 5. HALAMAN DIAGNOSA ---

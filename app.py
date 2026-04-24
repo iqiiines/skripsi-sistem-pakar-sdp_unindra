@@ -110,37 +110,41 @@ with st.sidebar:
 if menu == "Home":
     st.header("Selamat Datang")
     
-    # Menggunakan kolom dengan rasio 1:2 agar proporsional
-    col_logo, col_illus = st.columns([1, 2])
-    
-    with col_logo:
-        # Memanggil file yang baru Anda upload
-        # Pastikan nama file di bawah ini sama persis dengan yang ada di GitHub
-        try:
-            st.image("Logo-unindra_1.png", width=180)
-        except:
-            # Fallback jika file lokal tidak ditemukan saat testing
-            st.error("File Logo-unindra_1.png tidak ditemukan di direktori.")
-
-    with col_illus:
-        # Menampilkan ilustrasi dokter
-        st.image("https://img.freepik.com/free-vector/doctors-concept-illustration_114360-1515.jpg", 
-                 use_container_width=True)
-
-    # CSS Khusus untuk menyejajarkan logo di tengah tinggi ilustrasi (Vertical Align)
+    # CSS tambahan agar di HP (layar kecil) gambar tetap sejajar atau minimal rapi di tengah
     st.markdown(
         """
         <style>
-        /* Mencari kontainer kolom pertama agar isinya rata tengah secara vertikal */
-        [data-testid="stColumn"]:first-child {
-            display: flex;
+        /* Memastikan container kolom menggunakan Flexbox */
+        [data-testid="stHorizontalBlock"] {
             align-items: center;
-            justify-content: center;
+        }
+        
+        /* Pengaturan khusus untuk mobile agar logo tidak terlalu besar */
+        @media (max-width: 640px) {
+            [data-testid="stColumn"] {
+                display: flex;
+                justify-content: center;
+                text-align: center;
+                margin-bottom: 10px;
+            }
         }
         </style>
         """,
         unsafe_allow_html=True
     )
+
+    # Menggunakan vertical_alignment="center" agar logo dan ilustrasi sejajar tengah secara otomatis
+    col_logo, col_illus = st.columns([1, 2], vertical_alignment="center")
+    
+    with col_logo:
+        # Menampilkan Logo UNINDRA
+        # Menggunakan use_container_width agar responsif mengikuti lebar kolom
+        st.image("Logo-unindra_1.png", use_container_width=True)
+
+    with col_illus:
+        # Menampilkan Ilustrasi Dokter
+        st.image("https://img.freepik.com/free-vector/doctors-concept-illustration_114360-1515.jpg", 
+                 use_container_width=True)
 
     st.markdown("""
     ### Sistem Pakar Diagnosa Penyakit Pencernaan Manusia

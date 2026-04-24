@@ -11,58 +11,116 @@ def hash_password(password):
 def init_db():
     conn = sqlite3.connect('sistem_pakar.db')
     c = conn.cursor()
-    c.execute('CREATE TABLE IF NOT EXISTS basis_pengetahuan (id INTEGER PRIMARY KEY AUTOINCREMENT, nama_penyakit TEXT, gejala TEXT)')
-    c.execute('''CREATE TABLE IF NOT EXISTS history_diagnosa 
-                 (id INTEGER PRIMARY KEY AUTOINCREMENT, nama_pasien TEXT, tgl_lahir TEXT, usia INTEGER, tb INTEGER, bb INTEGER, 
-                  jenis_kelamin TEXT, gol_darah TEXT, riwayat_penyakit TEXT, tanggal_input TEXT, gejala_input TEXT, hasil_diagnosa TEXT)''')
-    c.execute('CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE, password TEXT, role TEXT)')
+    # Tabel Basis Pengetahuan
+    c.execute('''CREATE TABLE IF NOT EXISTS basis_pengetahuan 
+                 (id INTEGER PRIMARY KEY AUTOINCREMENT, nama_penyakit TEXT, gejala TEXT)''')
     
-    # Default Admin: admin / admin123
+    # Tabel History (Pastikan kolom usia, tb, bb ada)
+    c.execute('''CREATE TABLE IF NOT EXISTS history_diagnosa 
+                 (id INTEGER PRIMARY KEY AUTOINCREMENT, nama_pasien TEXT, tgl_lahir TEXT, 
+                  usia INTEGER, tb INTEGER, bb INTEGER, jenis_kelamin TEXT, 
+                  gol_darah TEXT, riwayat_penyakit TEXT, tanggal_input TEXT, 
+                  gejala_input TEXT, hasil_diagnosa TEXT)''')
+    
+    # Tabel Users untuk Login Staf
+    c.execute('''CREATE TABLE IF NOT EXISTS users 
+                 (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE, 
+                  password TEXT, role TEXT)''')
+    
+    # User Admin Default: admin / admin123
     c.execute("SELECT COUNT(*) FROM users")
     if c.fetchone()[0] == 0:
-        c.execute("INSERT INTO users (username, password, role) VALUES (?, ?, ?)", ("admin", hash_password("admin123"), "Admin"))
+        pw_admin = hash_password("admin123")
+        c.execute("INSERT INTO users (username, password, role) VALUES (?, ?, ?)", 
+                  ("admin", pw_admin, "Admin"))
     
-    # Default Penyakit
+    # Data Penyakit Default
     c.execute("SELECT COUNT(*) FROM basis_pengetahuan")
     if c.fetchone()[0] == 0:
-        data = [("Maag", "Mual, Perih Lambung, Kembung"), ("Diare", "BAB Cair, Lemas"), ("GERD", "Dada Terbakar, Mulut Pahit")]
-        c.executemany("INSERT INTO basis_pengetahuan (nama_penyakit, gejala) VALUES (?, ?)", data)
+        default_data = [
+            ("Maag (Gastritis)", "Mual, Perih Lambung, Perut Kembung, Cepat Kenyang"),
+            ("Diare", "Buang Air Besar Cair, Kram Perut, Demam, Dehidrasi"),
+            ("Asam Lambung (GERD)", "Dada Terbakar, Mulut Pahit, Sulit Menelan, Batuk Kering"),
+            ("Sembelit", "BAB Jarang, Tinja Keras, Mengejan Berlebih, Perut Begah")
+        ]
+        c.executemany("INSERT INTO basis_pengetahuan (nama_penyakit, gejala) VALUES (?, ?)", default_data)
+        
     conn.commit()
     conn.close()
 
-# --- FUNGSI AMBIL DATA ---
+# --- 2. FUNGSI CRUD & UTILITAS ---
 def ambil_basis():
     conn = sqlite3.connect('sistem_pakar.db')
     c = conn.cursor()
     c.execute("SELECT * FROM basis_pengetahuan")
-    res = c.fetchall()
+    data = c.fetchall()
     conn.close()
-    return res
+    return data
+
+def tambah_penyakit(nama, gejala):
+    conn = sqlite3.connect('sistem_pakar.db')
+    c = conn.cursor()
+    c.execute("INSERT INTO basis_pengetahuan (nama_penyakit, gejala) VALUES (?, ?)", (nama, gejala))
+    conn.commit()
+    conn.close()
+
+def update_penyakit(id_p, nama, gejala):
+    conn = sqlite3.connect('sistem_pakar.db')
+    c = conn.cursor()
+    c.execute("UPDATE basis_pengetahuan SET nama_penyakit=?, gejala=? WHERE id=?", (nama, gejala, id_p))
+    conn.commit()
+    conn.close()
+
+def hapus_penyakit(id_p):
+    conn = sqlite3.connect('sistem_pakar.db')
+    c = conn.cursor()
+    c.execute("DELETE FROM basis_pengetahuan WHERE id=?", (id_p,))
+    conn.commit()
+    conn.close()
 
 def ambil_history():
     conn = sqlite3.connect('sistem_pakar.db')
     c = conn.cursor()
     c.execute("SELECT * FROM history_diagnosa ORDER BY id DESC")
-    res = c.fetchall()
+    data = c.fetchall()
     conn.close()
-    return res
+    return data
+
+def tambah_user(username, password, role):
+    try:
+        conn = sqlite3.connect('sistem_pakar.db')
+        c = conn.cursor()
+        c.execute("INSERT INTO users (username, password, role) VALUES (?, ?, ?)", 
+                  (username, hash_password(password), role))
+        conn.commit()
+        conn.close()
+        return True
+    except: return False
+
+def ganti_password(username, password_baru):
+    conn = sqlite3.connect('sistem_pakar.db')
+    c = conn.cursor()
+    c.execute("UPDATE users SET password=? WHERE username=?", 
+              (hash_password(password_baru), username))
+    conn.commit()
+    conn.close()
 
 init_db()
 
-# --- 2. NAVIGASI SIDEBAR ---
+# --- 3. UI SIDEBAR ---
 with st.sidebar:
     st.title("🩺 SISTEM PAKAR")
-    menu = st.radio("Navigasi", ["Home", "Mulai Diagnosa", "Riwayat Analisa", "Login Staf"])
+    menu = st.radio("Navigasi Utama", ["Home", "Mulai Diagnosa", "Riwayat Analisa", "Login Staf"])
 
-# --- 3. HALAMAN HOME ---
+# --- 4. HALAMAN HOME ---
 if menu == "Home":
     st.header("🏠 Selamat Datang")
     st.image("https://img.freepik.com/free-vector/doctors-concept-illustration_114360-1515.jpg", width=500)
-    st.write("Sistem Pakar Diagnosa Penyakit Pencernaan Manusia.")
+    st.write("Sistem Pakar Diagnosa Penyakit Pencernaan Manusia v2.0")
 
-# --- 4. HALAMAN DIAGNOSA (Field yang tadi hilang sudah kembali di sini) ---
+# --- 5. HALAMAN DIAGNOSA ---
 elif menu == "Mulai Diagnosa":
-    st.header("📋 Form Diagnosa Mandiri")
+    st.header("📋 Form Diagnosa & Rekam Medis")
     col1, col2 = st.columns(2)
     with col1:
         nama_p = st.text_input("Nama Lengkap Pasien*")
@@ -78,7 +136,7 @@ elif menu == "Mulai Diagnosa":
 
     st.divider()
     
-    # Logika Diagnosa
+    # Logika Pengambilan Gejala dari DB
     raw_p = ambil_basis()
     if raw_p:
         data_map = {item[1]: [g.strip() for g in item[2].split(",")] for item in raw_p}
@@ -86,15 +144,17 @@ elif menu == "Mulai Diagnosa":
         
         st.subheader("Pilih Gejala yang Dirasakan:")
         gejala_user = []
-        c_gejala = st.columns(3)
+        cols = st.columns(3)
         for i, g in enumerate(semua_gejala):
-            if c_gejala[i % 3].checkbox(g): gejala_user.append(g)
+            if cols[i % 3].checkbox(g):
+                gejala_user.append(g)
 
-        if st.button("Proses Analisa"):
-            if not nama_p or tb == 0: st.error("Lengkapi data pasien!")
-            elif not gejala_user: st.error("Pilih gejala!")
+        if st.button("Proses Analisa Diagnosa"):
+            if not nama_p or tb == 0:
+                st.error("Mohon lengkapi biodata pasien!")
+            elif not gejala_user:
+                st.error("Silakan pilih minimal satu gejala!")
             else:
-                # Simpan & Tampilkan Hasil
                 hasil = []
                 for p_nm, p_gj in data_map.items():
                     match = set(gejala_user).intersection(p_gj)
@@ -102,114 +162,135 @@ elif menu == "Mulai Diagnosa":
                         persen = (len(match)/len(p_gj))*100
                         hasil.append(f"{p_nm} ({persen:.0f}%)")
                 
-                hasil_txt = ", ".join(hasil) if hasil else "Tidak Terdeteksi"
+                hasil_txt = ", ".join(hasil) if hasil else "Tidak Terdeteksi Penyakit Spesifik"
+                
                 # Simpan ke DB
                 conn = sqlite3.connect('sistem_pakar.db')
-                conn.execute("INSERT INTO history_diagnosa (nama_pasien, tgl_lahir, usia, tb, bb, jenis_kelamin, gol_darah, riwayat_penyakit, tanggal_input, gejala_input, hasil_diagnosa) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
-                             (nama_p, str(tgl_l), usia, tb, bb, jk, goldar, riwayat_p, datetime.now().strftime("%Y-%m-%d %H:%M"), ", ".join(gejala_user), hasil_txt))
+                conn.execute('''INSERT INTO history_diagnosa 
+                                (nama_pasien, tgl_lahir, usia, tb, bb, jenis_kelamin, 
+                                 gol_darah, riwayat_penyakit, tanggal_input, 
+                                 gejala_input, hasil_diagnosa) VALUES (?,?,?,?,?,?,?,?,?,?,?)''',
+                             (nama_p, str(tgl_l), usia, tb, bb, jk, goldar, riwayat_p, 
+                              datetime.now().strftime("%Y-%m-%d %H:%M"), 
+                              ", ".join(gejala_user), hasil_txt))
                 conn.commit()
                 conn.close()
-                st.success(f"Hasil Analisa: {hasil_txt}")
+                st.success(f"📌 Hasil Diagnosa: {hasil_txt}")
 
-# --- 5. RIWAYAT ANALISA ---
+# --- 6. HALAMAN RIWAYAT ---
 elif menu == "Riwayat Analisa":
-    st.header("📜 Riwayat Diagnosa")
-    data = ambil_history()
-    if data:
-        df = pd.DataFrame(data, columns=["ID", "Nama", "Tgl Lahir", "Usia", "TB", "BB", "Gender", "GolDarah", "Riwayat", "Waktu", "Gejala", "Hasil"])
+    st.header("📜 Riwayat Diagnosa Pasien")
+    h_data = ambil_history()
+    if h_data:
+        df = pd.DataFrame(h_data, columns=["ID", "Nama", "Lahir", "Usia", "TB", "BB", 
+                                           "Gender", "GolDar", "Riwayat", "Waktu", 
+                                           "Gejala", "Hasil"])
         st.dataframe(df.drop(columns=["ID"]), use_container_width=True)
+    else:
+        st.info("Belum ada data riwayat.")
 
-# --- 6. LOGIN STAF (Admin & Petugas) ---
+# --- 7. PANEL LOGIN STAF (ADMIN & PETUGAS) ---
 elif menu == "Login Staf":
     if 'role' not in st.session_state: st.session_state.role = None
-    
+    if 'user' not in st.session_state: st.session_state.user = None
+
     if not st.session_state.role:
+        st.subheader("🔐 Login Staf")
         u = st.text_input("Username")
         p = st.text_input("Password", type="password")
-        if st.button("Login"):
+        if st.button("Masuk"):
             conn = sqlite3.connect('sistem_pakar.db')
             c = conn.cursor()
-            c.execute("SELECT role FROM users WHERE username=? AND password=?", (u, hash_password(p)))
+            c.execute("SELECT role FROM users WHERE username=? AND password=?", 
+                      (u, hash_password(p)))
             res = c.fetchone()
+            conn.close()
             if res:
                 st.session_state.role = res[0]
                 st.session_state.user = u
                 st.rerun()
-            else: st.error("Gagal Login!")
+            else: st.error("Username atau Password salah!")
     else:
-        st.title(f"🛠️ Panel {st.session_state.role}")
+        st.title(f"🛠️ Panel Kontrol {st.session_state.role}")
         
-        # Inisialisasi Tab berdasarkan Role
+        # Pengaturan Tab Berdasarkan Role
         if st.session_state.role == "Admin":
-            t1, t2, t3, t4 = st.tabs(["Basis Pengetahuan", "Riwayat & Export", "Manajemen User", "Akun Saya"])
+            tabs = st.tabs(["Basis Pengetahuan", "Riwayat & Export", "Manajemen User", "Akun Saya"])
+            t1, t2, t3, t4 = tabs
         else:
-            t2, t4 = st.tabs(["Riwayat & Export", "Akun Saya"])
+            tabs = st.tabs(["Riwayat & Export", "Akun Saya"])
+            t2, t4 = tabs
             t1, t3 = None, None
 
-        # --- TAB 1: KELOLA GEJALA (Hanya Admin) ---
+        # TAB 1: BASIS PENGETAHUAN (Hanya Admin)
         if t1:
             with t1:
-                st.subheader("Edit/Hapus Penyakit & Gejala")
+                st.subheader("Kelola Daftar Penyakit & Gejala")
                 with st.expander("➕ Tambah Penyakit Baru"):
-                    n_p = st.text_input("Nama Penyakit Baru")
+                    n_p = st.text_input("Nama Penyakit")
                     n_g = st.text_area("Gejala (pisahkan dengan koma)")
-                    if st.button("Simpan Penyakit"):
-                        tambah_penyakit(n_p, n_g) # Pastikan fungsi ini sudah ada di bagian atas script
-                        st.success("Berhasil ditambah!")
+                    if st.button("Simpan Data"):
+                        tambah_penyakit(n_p, n_g)
+                        st.success("Data berhasil ditambahkan!")
                         st.rerun()
                 
                 st.divider()
                 for idp, nm, gj in ambil_basis():
                     with st.container(border=True):
-                        col_a, col_b = st.columns([3, 1])
-                        col_a.write(f"**{nm}**")
-                        col_a.caption(f"Gejala: {gj}")
+                        c_a, c_b = st.columns([4, 1])
+                        c_a.write(f"**{nm}**")
+                        c_a.caption(f"Gejala: {gj}")
                         
-                        if col_b.button("✏️ Edit", key=f"ed_{idp}"):
-                            st.session_state[f"edit_mode_{idp}"] = True
-                        if col_b.button("🗑️", key=f"del_{idp}"):
+                        if c_b.button("✏️", key=f"btn_ed_{idp}"):
+                            st.session_state[f"em_{idp}"] = True
+                        if c_b.button("🗑️", key=f"btn_dl_{idp}"):
                             hapus_penyakit(idp)
                             st.rerun()
                         
-                        if st.session_state.get(f"edit_mode_{idp}"):
-                            new_nm = st.text_input("Nama", value=nm, key=f"nnm_{idp}")
-                            new_gj = st.text_area("Gejala", value=gj, key=f"ngj_{idp}")
-                            if st.button("Update", key=f"up_{idp}"):
-                                update_penyakit(idp, new_nm, new_gj)
-                                st.session_state[f"edit_mode_{idp}"] = False
+                        if st.session_state.get(f"em_{idp}"):
+                            up_nm = st.text_input("Edit Nama", value=nm, key=f"u_nm_{idp}")
+                            up_gj = st.text_area("Edit Gejala", value=gj, key=f"u_gj_{idp}")
+                            col_c1, col_c2 = st.columns(2)
+                            if col_c1.button("Update", key=f"upd_{idp}"):
+                                update_penyakit(idp, up_nm, up_gj)
+                                st.session_state[f"em_{idp}"] = False
+                                st.rerun()
+                            if col_c2.button("Batal", key=f"btl_{idp}"):
+                                st.session_state[f"em_{idp}"] = False
                                 st.rerun()
 
-        # --- TAB 2: RIWAYAT & EXPORT ---
+        # TAB 2: RIWAYAT & EXPORT (Semua Role)
         with t2:
-            st.subheader("Data Riwayat Pasien")
-            h_data = ambil_history()
-            if h_data:
-                df_exp = pd.DataFrame(h_data, columns=["ID", "Nama", "Lahir", "Usia", "TB", "BB", "Gender", "GolDar", "Riwayat", "Waktu", "Gejala", "Hasil"])
-                st.download_button("📥 Export CSV", df_exp.to_csv(index=False).encode('utf-8'), "riwayat.csv", "text/csv")
-                st.dataframe(df_exp.drop(columns=["ID"]))
-            else:
-                st.info("Belum ada riwayat.")
+            st.subheader("Export Data Diagnosa")
+            h_data_all = ambil_history()
+            if h_data_all:
+                df_export = pd.DataFrame(h_data_all, columns=["ID","Nama","Lahir","Usia","TB","BB","Gender","GolDar","Riwayat","Waktu","Gejala","Hasil"])
+                csv_data = df_export.to_csv(index=False).encode('utf-8')
+                st.download_button("📥 Download Report CSV", csv_data, "laporan_diagnosa.csv", "text/csv")
+                st.dataframe(df_export)
+            else: st.info("Tidak ada data untuk di-export.")
 
-        # --- TAB 3: MANAJEMEN USER (Hanya Admin) ---
+        # TAB 3: MANAJEMEN USER (Hanya Admin)
         if t3:
             with t3:
-                st.subheader("Tambah User & Role Baru")
-                u_new = st.text_input("Username Baru")
-                p_new = st.text_input("Password Baru", type="password")
-                r_new = st.selectbox("Role", ["Petugas", "Admin"])
-                if st.button("Daftarkan User"):
+                st.subheader("Registrasi Staf Baru")
+                u_new = st.text_input("Username Baru", key="input_reg_user")
+                p_new = st.text_input("Password Baru", type="password", key="input_reg_pass")
+                r_new = st.selectbox("Role Akses", ["Petugas", "Admin"])
+                if st.button("Daftarkan"):
                     if tambah_user(u_new, p_new, r_new):
-                        st.success(f"User {u_new} aktif!")
-                    else: st.error("Username sudah ada!")
+                        st.success(f"User {u_new} berhasil dibuat!")
+                    else: st.error("Gagal! Username mungkin sudah ada.")
 
-        # --- TAB 4: GANTI PASSWORD (Semua Role) ---
+        # TAB 4: AKUN SAYA (Semua Role)
         with t4:
             st.subheader("Ganti Password Akun")
-            pw_baru = st.text_input("Password Baru", type="password")
+            pw_update = st.text_input("Password Baru", type="password", key="input_change_pass")
             if st.button("Perbarui Password"):
-                ganti_password(st.session_state.user, pw_baru)
-                st.success("Password diperbarui!")
+                ganti_password(st.session_state.user, pw_update)
+                st.success("Password berhasil diperbarui!")
 
-        if st.button("Logout"):
+        if st.button("Keluar (Logout)"):
             st.session_state.role = None
+            st.session_state.user = None
             st.rerun()

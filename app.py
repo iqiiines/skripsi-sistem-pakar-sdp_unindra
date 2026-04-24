@@ -110,7 +110,7 @@ init_db()
 # --- 3. UI SIDEBAR ---
 with st.sidebar:
     st.title("🩺 SDP EXPERT SYSTEM")
-    menu = st.radio("Navigasi Utama", ["Home", "Mulai Diagnosa", "Riwayat Analisa", "Login Staf"])
+    menu = st.radio("Navigasi Menu Utama", ["Home", "Mulai Diagnosa", "Riwayat Analisa", "Login Staf"])
 
 # --- 4. HALAMAN HOME ---
 if menu == "Home":
@@ -120,7 +120,7 @@ if menu == "Home":
 
 # --- 5. HALAMAN DIAGNOSA ---
 elif menu == "Mulai Diagnosa":
-    st.header("📋 Form Diagnosa & Rekam Medis")
+    st.header("Form Diagnosa & Rekam Medis")
     col1, col2 = st.columns(2)
     with col1:
         nama_p = st.text_input("Nama Lengkap Pasien*")
@@ -179,7 +179,7 @@ elif menu == "Mulai Diagnosa":
 
 # --- 6. HALAMAN RIWAYAT ---
 elif menu == "Riwayat Analisa":
-    st.header("📜 Riwayat Diagnosa Pasien")
+    st.header("Riwayat Diagnosa Pasien")
     h_data = ambil_history()
     if h_data:
         df = pd.DataFrame(h_data, columns=["ID", "Nama", "Lahir", "Usia", "TB", "BB", 
@@ -195,7 +195,7 @@ elif menu == "Login Staf":
     if 'user' not in st.session_state: st.session_state.user = None
 
     if not st.session_state.role:
-        st.subheader("🔐 Login Staf")
+        st.subheader("Login Staf")
         u = st.text_input("Username")
         p = st.text_input("Password", type="password")
         if st.button("Masuk"):

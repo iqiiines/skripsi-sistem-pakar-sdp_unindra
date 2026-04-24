@@ -110,39 +110,34 @@ with st.sidebar:
 if menu == "Home":
     st.header("Selamat Datang")
     
-    # Membuat dua kolom untuk menyejajarkan gambar
-    # Rasio [1, 3] berarti kolom kanan (ilustrasi) 3x lebih lebar dari kiri (logo)
-    # Ini untuk menjaga proporsi asli gambar ilustrasi agar tidak terlalu kecil.
-    col_logo, col_illus = st.columns([1, 3])
+    # Membuat dua kolom dengan rasio 1:2 agar sejajar rapi
+    col_logo, col_illus = st.columns([1, 2])
     
     with col_logo:
-        # Menampilkan Logo UNINDRA (image_3.png)
-        st.image("https://upload.wikimedia.org/wikipedia/id/8/8f/Logo_UNINDRA.png", caption="Logo UNINDRA", use_container_width=True)
-        # Catatan: URL di atas adalah contoh URL publik untuk logo UNINDRA. 
-        # Jika Anda memiliki file lokal, gunakan st.image("path/to/image_3.png", ...)
+        # Gunakan URL gambar yang valid atau path lokal (contoh: 'logo_unindra.png')
+        # Di sini saya sertakan URL placeholder yang stabil
+        st.image("https://upload.wikimedia.org/wikipedia/id/8/8f/Logo_UNINDRA.png", 
+                 width=180) # Atur lebar agar tidak terlalu besar dibanding ilustrasi
 
     with col_illus:
-        # Menampilkan Ilustrasi Dokter (image_2.png)
-        st.image("https://img.freepik.com/free-vector/doctors-concept-illustration_114360-1515.jpg", use_container_width=True)
+        # Menampilkan ilustrasi dokter
+        st.image("https://img.freepik.com/free-vector/doctors-concept-illustration_114360-1515.jpg", 
+                 use_container_width=True)
 
-    # Menambahkan CSS untuk memaksa logo UNINDRA sejajar secara vertikal dengan ilustrasi
+    # CSS untuk merapikan posisi logo agar rata tengah secara vertikal terhadap ilustrasi
     st.markdown(
         """
         <style>
-        /* Target kolom logo agar isinya rata tengah secara vertikal */
         [data-testid="stColumn"]:first-child {
             display: flex;
             align-items: center;
             justify-content: center;
         }
-        /* Opsional: memastikan gambar di dalam kolom logo tidak melebihi tinggi ilustrasi jika diperlukan,
-           tapi use_container_width=True biasanya sudah cukup. */
         </style>
         """,
         unsafe_allow_html=True
     )
 
-    # Lanjut dengan teks detail akademik
     st.markdown("""
     ### Sistem Pakar Diagnosa Penyakit Pencernaan Manusia
     Aplikasi ini dikembangkan oleh **Septyan Dwi Priyanto** sebagai syarat kelulusan Skripsi di **Universitas Indraprasta PGRI (UNINDRA)**.
